@@ -1,0 +1,12 @@
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env files
+.env
+
+# Optional: ignore node_modules if someone accidentally runs install at root
+node_modules/
