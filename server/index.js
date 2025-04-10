@@ -34,15 +34,6 @@ const port = process.env.PORT || 8000;
   }
 })();
 
-// Serve frontend in production
-if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../client/dist")));
-
-  app.get("*", (req, res, next) => {
-    if (req.originalUrl.startsWith("/api")) return next();
-    res.sendFile(path.resolve(__dirname, "../client", "dist", "index.html"));
-  });
-}
 
 // API to create short URL
 app.post("/api/shorten", async (req, res) => {
@@ -90,3 +81,14 @@ app.get("/:shortURL", async (req, res) => {
 app.listen(port, () => {
   console.log(`Server is running at port: ${port}`);
 });
+
+
+// Serve frontend in production
+if (process.env.NODE_ENV === "production") {
+    app.use(express.static(path.join(__dirname, "../client/dist")));
+  
+    app.get("*", (req, res, next) => {
+      if (req.originalUrl.startsWith("/api")) return next();
+      res.sendFile(path.resolve(__dirname, "../client", "dist", "index.html"));
+    });
+  }
