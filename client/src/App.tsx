@@ -10,7 +10,9 @@ export interface Url{
   createdAt: string;
 }
 
-const API_BASE = "http://localhost:8000"; 
+const API_BASE = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE,
+});
 function App(){
   const [urls, setUrls] = useState<Url[]>([]);
 

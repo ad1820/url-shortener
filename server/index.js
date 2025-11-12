@@ -31,8 +31,6 @@ const CACHE_TTL = 3600; // 1 hour cache
 // Connect to Redis
 connectRedis();
 
-import cors from "cors";
-
 app.use(
   cors({
     origin: [
