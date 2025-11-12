@@ -3,22 +3,25 @@ import UrlShortener from "./components/UrlShortener.tsx";
 import UrlList from "./components/UrlList.tsx";
 import axios from "axios";
 
-export interface Url{
+export interface Url {
   originalURL: string;
   shortURL: string;
   clicks: number;
   createdAt: string;
 }
 
-const API_BASE = axios.create({
+// ✅ rename this for clarity
+const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE,
 });
-function App(){
+
+function App() {
   const [urls, setUrls] = useState<Url[]>([]);
 
   const fetchUrls = async () => {
     try {
-      const res = await axios.get(`${API_BASE}/api/urls`);
+      // ✅ use your axios instance here (not axios.get)
+      const res = await api.get("/api/urls");
       setUrls(res.data.urls);
     } catch (err) {
       console.error("Error fetching URLs:", err);

@@ -1,7 +1,9 @@
 import { useState } from "react";
 import axios from "axios";
 
-const API_BASE = "http://localhost:8000";
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE,
+});
 
 interface Props {
   onUrlCreated: () => void;
@@ -16,7 +18,7 @@ export default function UrlShortener({ onUrlCreated }: Props) {
     if (!originalURL.trim()) return;
 
     try {
-      const res = await axios.post(`${API_BASE}/api/shorten`, { originalURL });
+      const res = await api.post("/api/shorten", { originalURL });
       setShortened(res.data.newURL.shortURL);
       onUrlCreated();
       setOriginalURL("");
@@ -47,11 +49,11 @@ export default function UrlShortener({ onUrlCreated }: Props) {
         <p className="mt-4 text-center">
           Short URL:{" "}
           <a
-            href={`${API_BASE}/${shortened}`}
+            href={`${import.meta.env.VITE_API_BASE}/${shortened}`}
             className="text-blue-600 underline"
             target="_blank"
           >
-            {`${API_BASE}/${shortened}`}
+            {`${import.meta.env.VITE_API_BASE}/${shortened}`}
           </a>
         </p>
       )}
