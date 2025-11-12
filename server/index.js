@@ -13,9 +13,8 @@ app.use(cors());
 app.use(express.json());
 
 const port = process.env.PORT || 8000;
-const CACHE_TTL = 3600; // 1 hour cache
+const CACHE_TTL = 3600; 
 
-// Connect to MongoDB
 (async () => {
   try {
     const connectionInstance = await mongoose.connect(
@@ -28,21 +27,16 @@ const CACHE_TTL = 3600; // 1 hour cache
   }
 })();
 
-// Connect to Redis
 connectRedis();
 
-app.use(
-  cors({
-    origin: [
-      "http://localhost:5173",
-      "https://url-shortener-vert-nu.vercel.app",
-    ],
-    credentials: true,
-  })
-);
+app.use(cors({
+  origin: ["https://url-shortener-vert-nu.vercel.app",
+    "http://localhost:5173/",
+  ],
+  methods: ["GET", "POST"],
+  credentials: true
+}));
 
-
-// Helper function to safely use Redis
 const getFromCache = async (key) => {
   try {
     if (!redisClient.isOpen) return null;
@@ -71,7 +65,6 @@ const incrementClicksInCache = async (key) => {
   }
 };
 
-// API route - Create/Get short URL
 app.post("/api/shorten", async (req, res) => {
   const { originalURL } = req.body;
 
@@ -80,11 +73,9 @@ app.post("/api/shorten", async (req, res) => {
   }
 
   try {
-    // Check if URL already exists in DB
     const existing = await URL.findOne({ originalURL });
 
     if (existing) {
-      // Cache the existing mapping
       await setInCache(existing.shortURL, existing.originalURL);
 
       return res.status(200).json({
@@ -92,13 +83,9 @@ app.post("/api/shorten", async (req, res) => {
         newURL: existing,
       });
     }
-
-    // Create new short URL
     const shortURL = nanoid(10);
     const newURL = new URL({ originalURL, shortURL });
     await newURL.save();
-
-    // Cache the new mapping immediately
     await setInCache(shortURL, originalURL);
 
     return res.status(201).json({
@@ -110,43 +97,29 @@ app.post("/api/shorten", async (req, res) => {
     return res.status(500).json({ error: "Internal Server Error" });
   }
 });
-
-// Redirect route - The most critical endpoint
 app.get("/:shortURL", async (req, res) => {
   const { shortURL } = req.params;
 
   try {
-    // First, check Redis cache
     const cachedURL = await getFromCache(shortURL);
 
     if (cachedURL) {
-      // Cache hit - redirect immediately
       console.log("Cache HIT for:", shortURL);
-
-      // Increment clicks in background (non-blocking)
       incrementClicksInCache(shortURL);
-
-      // Update DB clicks asynchronously (don't wait)
       URL.findOneAndUpdate({ shortURL }, { $inc: { clicks: 1 } }).catch((err) =>
         console.log("Background click update error:", err)
       );
 
       return res.redirect(cachedURL);
     }
-
-    // Cache miss - query database
     console.log("Cache MISS for:", shortURL);
     const entry = await URL.findOne({ shortURL });
 
     if (!entry) {
       return res.status(404).send("Not found");
     }
-
-    // Increment clicks and save
     entry.clicks++;
     await entry.save();
-
-    // Store in cache for next time
     await setInCache(shortURL, entry.originalURL);
 
     return res.redirect(entry.originalURL);
@@ -156,7 +129,6 @@ app.get("/:shortURL", async (req, res) => {
   }
 });
 
-// Analytics endpoint for frontend
 app.get("/api/analytics/:shortURL", async (req, res) => {
   const { shortURL } = req.params;
 
@@ -178,7 +150,6 @@ app.get("/api/analytics/:shortURL", async (req, res) => {
   }
 });
 
-// Get all URLs (for frontend list)
 app.get("/api/urls", async (req, res) => {
   try {
     const urls = await URL.find().sort({ createdAt: -1 }).limit(50);
@@ -189,7 +160,6 @@ app.get("/api/urls", async (req, res) => {
   }
 });
 
-// Periodic sync of Redis click counts to MongoDB
 setInterval(async () => {
   try {
     if (!redisClient.isOpen) return;
@@ -211,6 +181,6 @@ setInterval(async () => {
   } catch (error) {
     console.log("Click sync error:", error);
   }
-}, 60000); // Sync every minute
+}, 60000);
 
 app.listen(port, () => console.log(`Server running on port ${port}`));

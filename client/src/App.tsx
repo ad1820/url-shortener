@@ -10,24 +10,26 @@ export interface Url {
   createdAt: string;
 }
 
-// ✅ rename this for clarity
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE,
 });
+
+
 
 function App() {
   const [urls, setUrls] = useState<Url[]>([]);
 
   const fetchUrls = async () => {
     try {
-      // ✅ use your axios instance here (not axios.get)
       const res = await api.get("/api/urls");
       setUrls(res.data.urls);
     } catch (err) {
       console.error("Error fetching URLs:", err);
     }
   };
-
+  useEffect(() => {
+    console.log("API base:", import.meta.env.VITE_API_BASE);
+  }, []);
   useEffect(() => {
     fetchUrls();
   }, []);
