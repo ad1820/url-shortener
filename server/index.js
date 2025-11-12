@@ -31,6 +31,19 @@ const CACHE_TTL = 3600; // 1 hour cache
 // Connect to Redis
 connectRedis();
 
+import cors from "cors";
+
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://url-shortener-vert-nu.vercel.app",
+    ],
+    credentials: true,
+  })
+);
+
+
 // Helper function to safely use Redis
 const getFromCache = async (key) => {
   try {
